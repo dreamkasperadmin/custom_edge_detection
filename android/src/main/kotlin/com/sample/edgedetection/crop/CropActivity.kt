@@ -2,7 +2,6 @@ package com.sample.edgedetection.crop
 
 import android.app.Activity
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -28,19 +27,17 @@ class CropActivity : BaseActivity(), ICropView.Proxy {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         findViewById<View>(R.id.paper).post {
-            // we have to initialize everything in post when the view has been drawn and we have the actual height and width of the whole view
+            // Initialize everything after the view has been drawn
             mPresenter.onViewsReady(findViewById<View>(R.id.paper).width, findViewById<View>(R.id.paper).height)
         }
     }
 
     override fun provideContentViewId(): Int = R.layout.activity_crop
 
-
     override fun initPresenter() {
         val initialBundle = intent.getBundleExtra(EdgeDetectionHandler.INITIAL_BUNDLE) as Bundle
         mPresenter = CropPresenter(this, initialBundle)
         findViewById<ImageView>(R.id.crop).setOnClickListener {
-            Log.e(TAG, "Crop touched!")
             mPresenter.crop()
             changeMenuVisibility(true)
         }
@@ -57,12 +54,11 @@ class CropActivity : BaseActivity(), ICropView.Proxy {
 
         menu.setGroupVisible(R.id.enhance_group, showMenuItems)
 
-        menu.findItem(R.id.rotation_image).isVisible = showMenuItems
+        // Hide the rotate option
+        menu.findItem(R.id.rotation_image).isVisible = false
 
-        menu.findItem(R.id.gray).title =
-            initialBundle.getString(EdgeDetectionHandler.CROP_BLACK_WHITE_TITLE) as String
-        menu.findItem(R.id.reset).title =
-            initialBundle.getString(EdgeDetectionHandler.CROP_RESET_TITLE) as String
+        menu.findItem(R.id.gray).isVisible = false
+        menu.findItem(R.id.reset).isVisible = false
 
         if (showMenuItems) {
             menu.findItem(R.id.action_label).isVisible = true
@@ -74,7 +70,6 @@ class CropActivity : BaseActivity(), ICropView.Proxy {
 
         return super.onCreateOptionsMenu(menu)
     }
-
 
     private fun changeMenuVisibility(showMenuItems: Boolean) {
         this.showMenuItems = showMenuItems
@@ -89,26 +84,17 @@ class CropActivity : BaseActivity(), ICropView.Proxy {
                 return true
             }
             R.id.action_label -> {
-                Log.e(TAG, "Saved touched!")
                 item.isEnabled = false
                 mPresenter.save()
                 setResult(Activity.RESULT_OK)
-                System.gc()
                 finish()
                 return true
             }
-            R.id.rotation_image -> {
-                Log.e(TAG, "Rotate touched!")
-                mPresenter.rotate()
-                return true
-            }
             R.id.gray -> {
-                Log.e(TAG, "Black White touched!")
-                mPresenter.enhance()
+                mPresenter.enhance()  // Automatically apply black-and-white filter
                 return true
             }
             R.id.reset -> {
-                Log.e(TAG, "Reset touched!")
                 mPresenter.reset()
                 return true
             }
